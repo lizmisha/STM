@@ -1,0 +1,58 @@
+transform:
+  __class_fullname__: albumentations.core.composition.Compose
+  p: 1
+  additional_targets: {}
+  bbox_params: {}
+  keypoint_params: {}
+  transforms:
+    -
+      __class_fullname__: albumentations.core.composition.OneOf
+      p: 0.5
+      transforms:
+        -
+          __class_fullname__: albumentations.augmentations.transforms.RandomBrightness
+          p: 0.5
+          always_apply: false
+          limit:
+            - -0.2
+            - 0.2
+        -
+          __class_fullname__: albumentations.augmentations.transforms.RandomBrightnessContrast
+          p: 0.5
+          always_apply: false
+          brightness_limit:
+            - -0.2
+            - 0.2
+          contrast_limit:
+            - -0.2
+            - 0.2
+    -
+      __class_fullname__: albumentations.augmentations.transforms.HorizontalFlip
+      p: 0.5
+    -
+      __class_fullname__: albumentations.augmentations.transforms.VerticalFlip
+      p: 0.5
+    -
+      __class_fullname__: albumentations.augmentations.transforms.RandomRotate90
+      p: 0.5
+      always_apply: false
+    -
+      __class_fullname__: albumentations.augmentations.transforms.Resize
+      p: 1
+      always_apply: true
+      height: 512
+      width: 512
+      interpolation: 1
+    -
+      __class_fullname__: albumentations.augmentations.transforms.Normalize
+      p: 1
+      always_apply: false
+      max_pixel_value: 255
+      mean:
+        - 0.485
+        - 0.456
+        - 0.406
+      std:
+        - 0.229
+        - 0.224
+        - 0.225

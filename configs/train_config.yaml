@@ -1,0 +1,37 @@
+experiment_params:
+  project_name: stm
+  experiment_name: check
+  dump_path: /home/liz/STM/experiments
+  seed: 69
+
+data_params:
+  data_folder: /home/liz
+  batch_size: 4
+  num_workers: 4
+  transform:
+    train: /home/liz/STM/configs/train_transform.yaml
+    val: /home/liz/STM/configs/valid_transform.yaml
+    test: /home/liz/STM/configs/valid_transform.yaml
+
+train_params:
+  model: smp.unet
+  model_params: params
+  metrics:
+    src.modelling.metrics.IoU:
+      main_ch: None
+    src.
+
+stages:
+  main:
+    epochs: 70
+    loss: loss
+    optimizer: AdamW
+    optimizer_params:
+      lr: 0.001
+      weight_decay: 0.01
+    sheduler: ReduceLROnPlateau
+    sheduler_params:
+      patience: 3
+      factor: 0.5
+      threshold: 0.001
+      mode: min

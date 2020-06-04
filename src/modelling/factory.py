@@ -19,15 +19,15 @@ class Factory:
     def __init__(self, params: dict):
         self.params = params
 
-    def make_model(self, device) -> torch.nn.Module:
+    def make_model(self, stage, device) -> torch.nn.Module:
         model_name = self.params['model']
         if 'model_params' in self.params:
             model = pydoc.locate(model_name)(**self.params['model_params'])
         else:
             model = pydoc.locate(model_name)
 
-        if isinstance(self.params.get('weights', None), str):
-            model.load_state_dict(torch.load(self.params['weights']))
+        if isinstance(stage.get('weights', None), str):
+            model.load_state_dict(torch.load(stage['weights']))
         return model.to(device)
 
     @staticmethod
@@ -39,16 +39,17 @@ class Factory:
     def make_scheduler(optimizer, stage):
         return getattr(torch.optim.lr_scheduler, stage['scheduler'])(optimizer=optimizer, **stage['scheduler_params'])
 
-    def make_loss(self, device) -> torch.nn.Module:
-        if '.' not in self.params['loss']:
-            return getattr(torch.nn, self.params['loss'])().to(device)
+    @staticmethod
+    def make_loss(stage, device):
+        if '.' not in stage['loss']:
+            return getattr(torch.nn, stage['loss'])().to(device)
 
-        return pydoc.locate(self.params['loss'])().to(device)
+        return pydoc.locate(stage['loss'])().to(device)
 
     def make_metrics(self) -> Metrics:
         return Metrics(
             {
-                params: pydoc.locate(metric)()
+                params: pydoc.locate(metric)(**params)
                 for metric, params in self.params['metrics'].items()
             }
         )

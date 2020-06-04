@@ -126,10 +126,11 @@ class CheckpointSaver(Callback):
 
 class WanDB(Callback):
 
-    def __init__(self, project_name: str, log_dir: str):
+    def __init__(self, project_name: str, experiment_name: str, log_dir: str):
         super().__init__()
 
         self.project_name = project_name
+        self.experiment_name = experiment_name
         self.log_dir = log_dir
         self.logger = None
 
@@ -152,7 +153,12 @@ class WanDB(Callback):
         self.logger.join()
 
     def on_stage_begin(self):
-        self.logger = wandb.init(project=self.project_name, dir=self.log_dir, name=self.runner.current_stage_name)
+        self.logger = wandb.init(
+            project=self.project_name,
+            name=self.experiment_name,
+            dir=self.log_dir,
+            group=self.runner.current_stage_name
+        )
         self.logger.watch(self.runner.model)
 
     def on_stage_end(self):

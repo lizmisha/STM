@@ -22,6 +22,7 @@ def set_global_seed(seed: int):
 def set_global_configs(seed: int, max_threads: int):
     set_global_seed(seed)
     cv2.setNumThreads(max_threads)
+    torch.set_num_threads(max_threads)
 
 
 def get_config(path: str) -> dict:

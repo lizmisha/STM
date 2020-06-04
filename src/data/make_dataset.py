@@ -52,7 +52,7 @@ def make_data(
     _transform = make_transforms(transform, mode)
 
     df, coco_data = make_df_coco(data_folder, dataset_name, mode)
-    dataset = STMBorder(df, data_folder, _transform)
+    dataset = STMBorder(df, coco_data, data_folder, _transform)
 
     if mode == 'train':
         loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
