@@ -1,3 +1,4 @@
+import os
 from typing import Dict, Tuple, Union
 
 import albumentations as albu
@@ -15,8 +16,31 @@ def make_transforms(transform: Dict[str, str], mode: str):
     return _transform
 
 
-def make_df_coco(data_folder: str, dataset_name: str, mode: str, split_data: bool = True) -> Tuple[pd.DataFrame, COCO]:
-    pass
+def get_img_list(data: COCO) -> list:
+    img_list = []
+    imgIds = data.getImgIds()
+    for idx in imgIds:
+        img_list.append([data.loadImgs(idx)[0]['file_name'], idx])
+
+    return img_list
+
+
+def make_df_coco(
+        dataset_folder: str,
+        dataset_name: str,
+        mode: str,
+        split_data: bool = True
+) -> Tuple[pd.DataFrame, COCO]:
+    coco_data = COCO(os.path.join(dataset_folder, dataset_name))
+    df = pd.DataFrame(get_img_list(coco_data), columns=['image', 'id'])
+    if not split_data:
+        return df, coco_data
+
+    train_df, valid_df = train_test_split(df, test_size=0.1, random_state=69)
+    if mode == 'train':
+        return train_df, coco_data
+
+    return valid_df, coco_data
 
 
 def get_mask_border_from_coco(data: COCO, img_id: int) -> Tuple[Union[np.ndarray, None], Union[np.ndarray, None]]:
@@ -30,6 +54,12 @@ def get_mask_border_from_coco(data: COCO, img_id: int) -> Tuple[Union[np.ndarray
     borders = np.zeros(data.annToMask(anns[0]).shape, dtype=np.uint8)
     for num_ann in range(len(anns)):
         curr_mask = data.annToMask(anns[num_ann])
+        # try:
+        #     curr_mask = data.annToMask(anns[num_ann])
+        # except:
+        #     print(img_id)
+        #     print(anns[num_ann])
+        #     print()
         if mask is None:
             mask = curr_mask.copy()
         else:

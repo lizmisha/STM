@@ -1,36 +1,40 @@
 experiment_params:
   project_name: stm
-  experiment_name: check
+  experiment_name: eff_b3_ns_bowl2018_iou
   dump_path: /home/liz/STM/experiments
   seed: 69
 
 data_params:
-  data_folder: /home/liz
-  batch_size: 4
+  data_folder: /home/liz/Diplom_Unet/data/bowl2018
+  dataset_folder: /home/liz/STM/datasets
+  dataset_name: bowl2018.json
+  batch_size: 16
   num_workers: 4
   transform:
     train: /home/liz/STM/configs/train_transform.yaml
-    val: /home/liz/STM/configs/valid_transform.yaml
+    valid: /home/liz/STM/configs/valid_transform.yaml
     test: /home/liz/STM/configs/valid_transform.yaml
 
 train_params:
-  model: smp.unet
-  model_params: params
-  metrics:
-    src.modelling.metrics.IoU:
-      main_ch: None
-    src.
+  target_metric: 'iou'
+  model: Unet
+  model_params:
+    encoder_name: 'timm-efficientnet-b3'
+    encoder_weights: 'imagenet'
+    classes: 2
 
 stages:
   main:
     epochs: 70
-    loss: loss
+    loss: DiceLoss
+    loss_params:
+      activation: 'sigmoid'
     optimizer: AdamW
     optimizer_params:
       lr: 0.001
       weight_decay: 0.01
-    sheduler: ReduceLROnPlateau
-    sheduler_params:
+    scheduler: ReduceLROnPlateau
+    scheduler_params:
       patience: 3
       factor: 0.5
       threshold: 0.001

@@ -33,13 +33,13 @@ class Runner:
     @property
     def model(self):
         if self._model is None:
-            self._model = self.factory.make_model(device=self.device)
+            self._model = self.factory.make_model(stage=self.current_stage, device=self.device)
         return self._model
 
     @property
     def loss(self):
         if self._loss is None:
-            self._loss = self.factory.make_loss(device=self.device)
+            self._loss = self.factory.make_loss(stage=self.current_stage, device=self.device)
         return self._loss
 
     @property
@@ -76,7 +76,8 @@ class Runner:
             self.metrics.valid_metrics = self._run_one_epoch(epoch, valid_loader, is_train=False)
 
             if isinstance(self.scheduler, ReduceLROnPlateau):
-                self.scheduler.step(self.metrics.valid_metrics['mAP'], epoch)
+                self.scheduler.step(self.metrics.valid_metrics[self.factory.params['train_params']['target_metric']],
+                                    epoch)
             else:
                 self.scheduler.step(epoch)
 
@@ -109,7 +110,7 @@ class Runner:
     def _make_step(self, data: Dict[str, torch.Tensor], is_train: bool) -> Dict[str, float]:
         report = {}
 
-        images, labels, labels_len = data
+        images, labels = data
         images = images.to(self.device)
         labels = labels.to(self.device)
 
@@ -120,8 +121,8 @@ class Runner:
 
         if is_train:
             loss.backward()
-            grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 2.5)
-            report['grad'] = grad_norm
+            # grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 2.5)
+            # report['grad'] = grad_norm
             self.optimizer.step()
             self.optimizer.zero_grad()
         else:

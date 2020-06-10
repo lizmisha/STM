@@ -20,7 +20,7 @@ class STMBorder(Dataset):
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
 
-        img = cv2.imread(os.path.join(self.data_folder, row['image_name']))
+        img = cv2.imread(os.path.join(self.data_folder, row['image']))
         if img.ndim == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         else:
@@ -34,6 +34,15 @@ class STMBorder(Dataset):
             img = augmented['image']
             masks = augmented['mask']
 
+        # try:
+        #     if self.transform is not None:
+        #         augmented = self.transform(image=img, mask=masks)
+        #         img = augmented['image']
+        #         masks = augmented['mask']
+        # except:
+        #     print(masks)
+        #     print(f'img id: {row["id"]}')
+
         masks = masks.permute(2, 0, 1)
         return img, masks
 
@@ -43,6 +52,7 @@ class STMBorder(Dataset):
 
 def make_data(
         data_folder: str,
+        dataset_folder: str,
         dataset_name: str,
         mode: str,
         transform: dict,
@@ -51,7 +61,7 @@ def make_data(
 ):
     _transform = make_transforms(transform, mode)
 
-    df, coco_data = make_df_coco(data_folder, dataset_name, mode)
+    df, coco_data = make_df_coco(dataset_folder, dataset_name, mode)
     dataset = STMBorder(df, coco_data, data_folder, _transform)
 
     if mode == 'train':

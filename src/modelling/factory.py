@@ -1,8 +1,11 @@
 import pydoc
 
 import torch
+import segmentation_models_pytorch as smp
 
 from src.data.make_dataset import make_data
+from src.modelling.constants import MASK_VALUES
+from src.modelling.metrics import IoU
 
 
 class Metrics:
@@ -21,10 +24,17 @@ class Factory:
 
     def make_model(self, stage, device) -> torch.nn.Module:
         model_name = self.params['model']
-        if 'model_params' in self.params:
-            model = pydoc.locate(model_name)(**self.params['model_params'])
+
+        if '.' not in model_name:
+            if 'model_params' in self.params:
+                model = getattr(smp, model_name)(**self.params['model_params'])
+            else:
+                model = getattr(smp, model_name)()
         else:
-            model = pydoc.locate(model_name)
+            if 'model_params' in self.params:
+                model = pydoc.locate(model_name)(**self.params['model_params'])
+            else:
+                model = pydoc.locate(model_name)
 
         if isinstance(stage.get('weights', None), str):
             model.load_state_dict(torch.load(stage['weights']))
@@ -32,8 +42,7 @@ class Factory:
 
     @staticmethod
     def make_optimizer(model: torch.nn.Module, stage: dict) -> torch.optim.Optimizer:
-        return getattr(torch.optim, stage['optimizer'])(params=model.get_trainable_parameters(),
-                                                        **stage['optimizer_params'])
+        return getattr(torch.optim, stage['optimizer'])(params=model.parameters(), **stage['optimizer_params'])
 
     @staticmethod
     def make_scheduler(optimizer, stage):
@@ -42,17 +51,17 @@ class Factory:
     @staticmethod
     def make_loss(stage, device):
         if '.' not in stage['loss']:
-            return getattr(torch.nn, stage['loss'])().to(device)
+            return getattr(smp.utils.losses, stage['loss'])(**stage['loss_params']).to(device)
 
         return pydoc.locate(stage['loss'])().to(device)
 
-    def make_metrics(self) -> Metrics:
-        return Metrics(
-            {
-                params: pydoc.locate(metric)(**params)
-                for metric, params in self.params['metrics'].items()
-            }
-        )
+    @staticmethod
+    def make_metrics() -> Metrics:
+        func = {'iou': IoU()}
+        for mask_name in MASK_VALUES:
+            func[f'iou_{mask_name}'] = IoU(main_ch=[MASK_VALUES[mask_name]])
+
+        return Metrics(func)
 
 
 class DataFactory:

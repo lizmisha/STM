@@ -26,6 +26,7 @@ class IoU:
         self.main_ch = main_ch
 
     def __call__(self, pr, gt):
+        pr = torch.sigmoid(pr)
         pr = _threshold(pr, self.threshold)
         pr, gt = _take_channel(pr, gt, self.main_ch)
 
