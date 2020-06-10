@@ -77,6 +77,21 @@ def get_mask_border_from_coco(data: COCO, img_id: int) -> Tuple[Union[np.ndarray
     return mask, borders
 
 
+def get_mask_border_background_from_coco(
+        data: COCO,
+        imd_id: int
+) -> Tuple[Union[np.ndarray, None], Union[np.ndarray, None], Union[np.ndarray, None]]:
+    mask, borders = get_mask_border_from_coco(data, imd_id)
+    if mask is None or borders is None:
+        return None, None, None
+
+    mask_background = np.ones_like(mask, dtype=float)
+    mask_background -= mask
+    mask_background -= borders
+    mask_background = np.clip(mask_background, 0, 1).astype(np.uint8)
+    return mask, borders, mask_background
+
+
 def get_mask_from_coco(data: COCO, img_id: int) -> Union[np.ndarray, None]:
     ann_ids = data.getAnnIds(imgIds=img_id, iscrowd=None)
     anns = data.loadAnns(ann_ids)

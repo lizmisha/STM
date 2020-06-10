@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Dict
 
 import torch
+import numpy as np
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 
@@ -99,9 +100,15 @@ class Runner:
                 for key, value in step_report.items():
                     if isinstance(value, torch.Tensor):
                         value = value.item()
-                    epoch_report[key] += value
 
-                metrics = {k: v / (i + 1) for k, v in epoch_report.items()}
+                    if isinstance(value, np.ndarray):
+                        epoch_report[key] = np.append(epoch_report[key], value)
+                    else:
+                        epoch_report[key] += value
+
+                metrics = {k: v / (i + 1) for k, v in epoch_report.items() if k != 'map'}
+                if 'map' in epoch_report:
+                    metrics['map'] = epoch_report['map'].mean()
                 progress_bar.set_postfix(**{k: f'{v:.5f}' for k, v in metrics.items()})
                 self.callbacks.on_batch_end(i, step_report=step_report, is_train=is_train)
         return metrics
@@ -109,7 +116,11 @@ class Runner:
     def _make_step(self, data: Dict[str, torch.Tensor], is_train: bool) -> Dict[str, float]:
         report = {}
 
-        images, labels = data
+        if is_train:
+            images, labels = data
+        else:
+            images, labels, labeled_mask = data
+
         images = images.to(self.device)
         labels = labels.to(self.device)
 
@@ -126,6 +137,9 @@ class Runner:
             self.optimizer.zero_grad()
         else:
             for metric, f in self.metrics.functions.items():
-                report[metric] = f(predictions, labels)
+                if metric == 'map':
+                    report[metric] = f(predictions, labeled_mask)
+                else:
+                    report[metric] = f(predictions, labels)
 
         return report

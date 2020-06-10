@@ -1,14 +1,15 @@
 experiment_params:
   project_name: stm
-  experiment_name: eff_b3_ns_bowl2018_map
+  experiment_name: eff_b3_ns_stm_lr
   dump_path: /home/liz/STM/experiments
   seed: 69
 
 data_params:
-  data_folder: /home/liz/Diplom_Unet/data/bowl2018
+  data_folder: /home/liz/STM/data
   dataset_folder: /home/liz/STM/datasets
-  dataset_name: bowl2018.json
-  batch_size: 16
+  dataset_name: good_train_coco.json
+  test_dataset_name: coco_test_annots.json
+  batch_size: 3
   num_workers: 4
   transform:
     train: /home/liz/STM/configs/train_transform.yaml
@@ -21,18 +22,19 @@ train_params:
   model_params:
     encoder_name: 'timm-efficientnet-b3'
     encoder_weights: 'imagenet'
-    classes: 2
+    classes: 3
 
 stages:
-  main:
-    epochs: 70
+  main_stm:
+    weights: /home/liz/STM/experiments/eff_b3_ns_bowl2018_map/weights/main/epoch_55_metric_0.39568.pth
+    epochs: 50
     loss: DiceLoss
     loss_params:
       activation: 'sigmoid'
     optimizer: AdamW
     optimizer_params:
       lr: 0.001
-      weight_decay: 0.01
+      weight_decay: 0.001
     scheduler: ReduceLROnPlateau
     scheduler_params:
       patience: 3

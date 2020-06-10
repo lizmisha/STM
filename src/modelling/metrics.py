@@ -67,14 +67,14 @@ def map_score(pr, gt, thresholds: np.ndarray = np.arange(0.5, 1.0, 0.05)):
 
 
 def my_watershed(result, threshold=0.3):
-    mask_border = result[MASK_VALUES['border']].copy()
-    m = result[MASK_VALUES['border']] * (1 - result[MASK_VALUES['main_mask']])
+    mask_border = result[MASK_VALUES['main_mask']].copy()
+    m = result[MASK_VALUES['main_mask']] * (1 - result[MASK_VALUES['border']])
     mask_border[m <= threshold + 0.35] = 0
     mask_border[m > threshold + 0.35] = 1
     mask_border = mask_border.astype(np.bool)
     mask_border = remove_small_objects(mask_border, 10).astype(np.uint8)
 
-    mask = (result[MASK_VALUES['border']] > threshold).astype(np.bool)
+    mask = (result[MASK_VALUES['main_mask']] > threshold).astype(np.bool)
     mask = remove_small_holes(mask, 1000)
     mask = remove_small_objects(mask, 8).astype(np.uint8)
 
@@ -89,17 +89,29 @@ class MAPScore:
 
     def __call__(self, pr, gt):
         pr = pr.cpu().detach().numpy()
-        gt = gt.cpu().detach().numpy()
+        gt = gt.numpy()
 
         scores = []
+        # print(f'Source pred shape: {pr.shape}')
+        # print(f'Source gt shape: {gt.shape}')
+        # print()
         for curr_pr, curr_gt in zip(pr, gt):
             if self.use_postproc:
-                pr = softmax(pr, axis=0)
-                pr = my_watershed(pr)
+                curr_pr = softmax(curr_pr, axis=0)
+                curr_pr = my_watershed(curr_pr)
 
-            scores.append(map_score(curr_pr, curr_gt, self.thresholds))
+            # print(f'Pred shape: {curr_pr.shape}')
+            # print(f'Gt shape: {curr_gt.shape}')
 
-        return np.array(scores).mean()
+            curr_score = map_score(curr_pr, curr_gt, self.thresholds)
+            scores.append(curr_score)
+            # print(f'mAP: {curr_score}')
+            # print()
+
+        # print(f'All score: {scores}')
+        # print()
+        # print()
+        return np.array(scores)
 
 
 class IoU:

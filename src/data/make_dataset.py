@@ -4,17 +4,20 @@ import cv2
 import numpy as np
 import pandas as pd
 from pycocotools.coco import COCO
+from scipy import ndimage as ndi
 from torch.utils.data import Dataset, DataLoader
 
-from src.data.data_utils import get_mask_border_from_coco, make_transforms, make_df_coco
+from src.data.data_utils import make_transforms, make_df_coco, get_mask_border_background_from_coco
+from src.modelling.constants import MASK_VALUES
 
 
 class STMBorder(Dataset):
 
-    def __init__(self, df: pd.DataFrame, data_coco: COCO, data_folder: str, transform=None):
+    def __init__(self, df: pd.DataFrame, data_coco: COCO, data_folder: str, mode: str, transform=None):
         self.df = df
         self.data_coco = data_coco
         self.data_folder = data_folder
+        self.mode = mode
         self.transform = transform
 
     def __getitem__(self, idx):
@@ -26,7 +29,7 @@ class STMBorder(Dataset):
         else:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        masks = get_mask_border_from_coco(self.data_coco, row['id'])
+        masks = get_mask_border_background_from_coco(self.data_coco, row['id'])
         masks = np.stack(masks, axis=-1).astype('float')
 
         if self.transform is not None:
@@ -34,17 +37,15 @@ class STMBorder(Dataset):
             img = augmented['image']
             masks = augmented['mask']
 
-        # try:
-        #     if self.transform is not None:
-        #         augmented = self.transform(image=img, mask=masks)
-        #         img = augmented['image']
-        #         masks = augmented['mask']
-        # except:
-        #     print(masks)
-        #     print(f'img id: {row["id"]}')
-
+        labeled_mask = masks.numpy()[:, :, MASK_VALUES['main_mask']]
+        labeled_mask = ndi.label(labeled_mask)[0]
         masks = masks.permute(2, 0, 1)
-        return img, masks
+        # labeled_mask = get_labeled_mask_from_coco(self.data_coco, row['id'])
+
+        if self.mode == 'train':
+            return img, masks
+
+        return img, masks, labeled_mask
 
     def __len__(self):
         return len(self.df)
@@ -58,11 +59,19 @@ def make_data(
         transform: dict,
         num_workers: int,
         batch_size: int,
+        test_dataset_name: str = None
 ):
     _transform = make_transforms(transform, mode)
 
-    df, coco_data = make_df_coco(dataset_folder, dataset_name, mode)
-    dataset = STMBorder(df, coco_data, data_folder, _transform)
+    if test_dataset_name is None:
+        df, coco_data = make_df_coco(dataset_folder, dataset_name, mode)
+    else:
+        if mode == 'train':
+            df, coco_data = make_df_coco(dataset_folder, dataset_name, mode, split_data=False)
+        else:
+            df, coco_data = make_df_coco(dataset_folder, test_dataset_name, mode, split_data=False)
+
+    dataset = STMBorder(df, coco_data, data_folder, mode, _transform)
 
     if mode == 'train':
         loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
