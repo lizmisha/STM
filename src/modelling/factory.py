@@ -5,7 +5,7 @@ import segmentation_models_pytorch as smp
 
 from src.data.make_dataset import make_data
 from src.modelling.constants import MASK_VALUES
-from src.modelling.metrics import IoU
+from src.modelling.metrics import IoU, MAPScore
 
 
 class Metrics:
@@ -60,6 +60,8 @@ class Factory:
         func = {'iou': IoU()}
         for mask_name in MASK_VALUES:
             func[f'iou_{mask_name}'] = IoU(main_ch=[MASK_VALUES[mask_name]])
+
+        func['map'] = MAPScore(use_postproc=True)
 
         return Metrics(func)
 

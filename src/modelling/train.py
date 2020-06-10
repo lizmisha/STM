@@ -27,6 +27,7 @@ def parse_args():
 
 def create_callbacks(experiment_params: dict, target_metric: str) -> Callbacks:
     log_dir = os.path.join(experiment_params['dump_path'], experiment_params['experiment_name'], 'logs')
+    os.makedirs(log_dir, exist_ok=True)
     weights_dir = os.path.join(experiment_params['dump_path'], experiment_params['experiment_name'], 'weights')
     return Callbacks(
         [
@@ -34,7 +35,7 @@ def create_callbacks(experiment_params: dict, target_metric: str) -> Callbacks:
             CheckpointSaver(
                 metric_name=target_metric,
                 save_dir=weights_dir,
-                save_name='epoch_{epoch}_' + target_metric + '_{' + target_metric + '}.pth',
+                save_name='epoch_{epoch}_metric_{metric}.pth',
                 num_checkpoints=1,
                 mode='max'
             )

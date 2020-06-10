@@ -150,8 +150,6 @@ class WanDB(Callback):
         for k, v in self.metrics.valid_metrics.items():
             self.logger.log({f'valid_{k}': float(v), 'epoch': epoch})
 
-        self.logger.join()
-
     def on_stage_begin(self):
         self.logger = wandb.init(
             project=self.project_name,

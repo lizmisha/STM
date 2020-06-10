@@ -93,3 +93,27 @@ def get_mask_from_coco(data: COCO, img_id: int) -> Union[np.ndarray, None]:
             mask += curr_mask
 
     return np.clip(mask, 0, 1).astype(np.uint8)
+
+
+def get_labeled_mask_from_coco(data: COCO, img_id: int) -> Union[np.ndarray, None]:
+    ann_ids = data.getAnnIds(imgIds=img_id, iscrowd=None)
+    anns = data.loadAnns(ann_ids)
+
+    if not anns:
+        return None
+
+    mask = None
+    for num_ann in range(len(anns)):
+        curr_mask = data.annToMask(anns[num_ann]) * (num_ann + 1)
+        if mask is None:
+            mask = curr_mask.copy()
+        else:
+            mask += curr_mask
+
+    labels = set(np.arange(0, len(anns) + 1))
+    mask_labels = np.unique(mask)
+    for lbl in mask_labels:
+        if lbl not in labels:
+            mask[mask == lbl] = 0
+
+    return mask.astype(np.int32)

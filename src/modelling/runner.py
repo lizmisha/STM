@@ -76,8 +76,7 @@ class Runner:
             self.metrics.valid_metrics = self._run_one_epoch(epoch, valid_loader, is_train=False)
 
             if isinstance(self.scheduler, ReduceLROnPlateau):
-                self.scheduler.step(self.metrics.valid_metrics[self.factory.params['train_params']['target_metric']],
-                                    epoch)
+                self.scheduler.step(self.metrics.valid_metrics[self.factory.params['target_metric']], epoch)
             else:
                 self.scheduler.step(epoch)
 
