@@ -74,7 +74,7 @@ def my_watershed(result, threshold=0.3):
     mask_border = mask_border.astype(np.bool)
     mask_border = remove_small_objects(mask_border, 10).astype(np.uint8)
 
-    mask = (result[2] > threshold).astype(np.bool)
+    mask = (result[MASK_VALUES['border']] > threshold).astype(np.bool)
     mask = remove_small_holes(mask, 1000)
     mask = remove_small_objects(mask, 8).astype(np.uint8)
 
