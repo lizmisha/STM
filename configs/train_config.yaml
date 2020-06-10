@@ -1,6 +1,6 @@
 experiment_params:
   project_name: stm
-  experiment_name: eff_b3_ns_bowl2018_iou
+  experiment_name: eff_b3_ns_bowl2018_map
   dump_path: /home/liz/STM/experiments
   seed: 69
 
@@ -16,7 +16,7 @@ data_params:
     test: /home/liz/STM/configs/valid_transform.yaml
 
 train_params:
-  target_metric: 'iou'
+  target_metric: 'map'
   model: Unet
   model_params:
     encoder_name: 'timm-efficientnet-b3'
@@ -38,4 +38,4 @@ stages:
       patience: 3
       factor: 0.5
       threshold: 0.001
-      mode: min
+      mode: max
