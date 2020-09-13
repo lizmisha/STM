@@ -40,7 +40,6 @@ class STMBorder(Dataset):
         labeled_mask = masks.numpy()[:, :, MASK_VALUES['main_mask']]
         labeled_mask = ndi.label(labeled_mask)[0]
         masks = masks.permute(2, 0, 1)
-        # labeled_mask = get_labeled_mask_from_coco(self.data_coco, row['id'])
 
         if self.mode == 'train':
             return img, masks

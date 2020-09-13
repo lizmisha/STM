@@ -3,6 +3,7 @@ from segmentation_models_pytorch.utils.losses import DiceLoss
 from torch import nn
 from torch.nn import functional as F
 
+
 class FocalLoss(nn.Module):
     __name__ = 'focal_loss'
 

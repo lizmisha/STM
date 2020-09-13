@@ -37,7 +37,6 @@ class Factory:
                 model = pydoc.locate(model_name)
 
         if isinstance(stage.get('weights', None), str):
-            print('TYYYYYYYYYYYYYYYYYYYYYYYT!')
             model.load_state_dict(torch.load(stage['weights']))
         return model.to(device)
 

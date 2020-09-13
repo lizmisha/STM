@@ -131,8 +131,6 @@ class Runner:
 
         if is_train:
             loss.backward()
-            # grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 2.5)
-            # report['grad'] = grad_norm
             self.optimizer.step()
             self.optimizer.zero_grad()
         else:

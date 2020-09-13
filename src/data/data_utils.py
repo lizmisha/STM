@@ -54,12 +54,6 @@ def get_mask_border_from_coco(data: COCO, img_id: int) -> Tuple[Union[np.ndarray
     borders = np.zeros(data.annToMask(anns[0]).shape, dtype=np.uint8)
     for num_ann in range(len(anns)):
         curr_mask = data.annToMask(anns[num_ann])
-        # try:
-        #     curr_mask = data.annToMask(anns[num_ann])
-        # except:
-        #     print(img_id)
-        #     print(anns[num_ann])
-        #     print()
         if mask is None:
             mask = curr_mask.copy()
         else:

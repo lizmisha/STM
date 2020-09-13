@@ -92,25 +92,14 @@ class MAPScore:
         gt = gt.numpy()
 
         scores = []
-        # print(f'Source pred shape: {pr.shape}')
-        # print(f'Source gt shape: {gt.shape}')
-        # print()
         for curr_pr, curr_gt in zip(pr, gt):
             if self.use_postproc:
                 curr_pr = softmax(curr_pr, axis=0)
                 curr_pr = my_watershed(curr_pr)
 
-            # print(f'Pred shape: {curr_pr.shape}')
-            # print(f'Gt shape: {curr_gt.shape}')
-
             curr_score = map_score(curr_pr, curr_gt, self.thresholds)
             scores.append(curr_score)
-            # print(f'mAP: {curr_score}')
-            # print()
 
-        # print(f'All score: {scores}')
-        # print()
-        # print()
         return np.array(scores)
 
 
